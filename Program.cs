@@ -4,42 +4,45 @@ using System.Threading.Tasks;
 
 class Program
 {
-    static SemaphoreSlim computers = new SemaphoreSlim(3, 3);
-    static Random random = new Random();
+    static SemaphoreSlim sem = new SemaphoreSlim(3, 3);
+    static Random rand = new Random();
 
     static async Task Main()
     {
-        Task[] students = new Task[7];
-        
-        for (int i = 0; i < students.Length; i++)
+        Console.WriteLine("Студенты идут к компьютерам");
+        Console.WriteLine();
+
+        Task[] mas = new Task[7];
+
+        for (int i = 0; i < 7; i++)
         {
-            int studentId = i + 1;
-            students[i] = Task.Run(() => DoTask(studentId));
+            int n = i + 1;
+            mas[i] = Task.Run(() => Work(n));
         }
 
-        await Task.WhenAll(students);
-        
-        Console.WriteLine("\nВсе студенты выполнили задания.");
+        await Task.WhenAll(mas);
+        Console.WriteLine();
+        Console.WriteLine("Все закончили");
     }
 
-    static async Task DoTask(int studentId)
+    static async Task Work(int n)
     {
-        Console.WriteLine($"Студент {studentId} ждёт компьютер...");
+        Console.WriteLine("Студент " + n + " ждет...");
 
-        await computers.WaitAsync();
+        await sem.WaitAsync();
 
         try
         {
-            Console.WriteLine($"--> Студент {studentId} сел за компьютер. " +
-                              $"Свободно: {computers.CurrentCount}");
+            Console.WriteLine("Студент " + n + " сел. Свободно: " + sem.CurrentCount);
             
-            await Task.Delay(random.Next(1000, 3000));
+            int t = rand.Next(1000, 3000);
+            await Task.Delay(t);
             
-            Console.WriteLine($"<-- Студент {studentId} закончил работу.");
+            Console.WriteLine("Студент " + n + " освободил компьютер");
         }
         finally
         {
-            computers.Release();
+            sem.Release();
         }
     }
 }
